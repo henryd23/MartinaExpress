@@ -1,15 +1,11 @@
 import os
 import logging
 import random
-import re
 from threading import Thread
-from flask import Flask, request, jsonify
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters, PicklePersistence
 from dotenv import load_dotenv
 
-# Aggiungiamo un wrapper per le chiamate sincrone di Flask
-from asgiref.sync import async_to_sync
 
 # --- CONFIGURAZIONE GLOBALE ---
 load_dotenv()
@@ -130,10 +126,6 @@ HINTS_DATA = {
 # Contiene: {'action': 'DISCOVER'/'ADVANCE', 'target_stage': 1/2/3...}
 WAITING_FOR_CODE = "WAITING_FOR_CODE"
 
-
-# --- INIZIALIZZAZIONE FLASK ---
-# Inizializza l'app Flask che Gunicorn eseguirà
-web_server = Flask(__name__)
 
 # Funzione helper per accedere in modo sicuro allo stato persistente
 def get_couple_stages(context: ContextTypes.DEFAULT_TYPE) -> dict:
