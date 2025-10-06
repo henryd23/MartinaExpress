@@ -146,9 +146,8 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return False
     return True
-
-# Funzioni Handler: Definizione delle azioni del bot
-
+ 
+# FUNZIONI HANDLER: Definizione delle azioni del bot
 # Funzione che risponde al comando /start
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Invia un messaggio di benvenuto quando viene emesso il comando /start."""
@@ -397,7 +396,7 @@ async def handle_hint_selection(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text("Errore: Indizio non trovato. Contatta l'admin.")
             return
 
-        await query.edit_message_text(f"Sto inviando gli indizi per: {hint_name}...")
+        await query.edit_message_text(f"Sto inviando gli indizi per la prossima tappa...")
 
         # Trova e invia tutte le immagini (image1, image2, image3, ...)
         image_count = 0
@@ -413,14 +412,14 @@ async def handle_hint_selection(update: Update, context: ContextTypes.DEFAULT_TY
                      await context.bot.send_photo(
                         chat_id=chat_id,
                         photo=photo_file,
-                        caption=f"Indizio: {hint_name} - Immagine {image_count + 1}"
+                        caption=f"Indizio: Immagine {image_count + 1}"
                     )
                 image_count += 1
                 
             except FileNotFoundError:
                  await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"⚠️ Attenzione: Immagine '{image_path}' per l'indizio '{hint_name}' non trovata. Controlla il nome file."
+                    text=f"⚠️ Attenzione: Immagine '{image_path}' per l'indizio '{image_count + 1}' non trovata. Controlla il nome file."
                 )
             except Exception as e:
                 await context.bot.send_message(
