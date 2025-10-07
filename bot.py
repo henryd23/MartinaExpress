@@ -822,7 +822,7 @@ async def handle_advance_selection(update: Update, context: ContextTypes.DEFAULT
             logging.error(f"Errore nella notifica alla coppia {target_name}: {e}")
 
 # Nuova funzione: Resetta tutti i progressi del gioco
-async def resetgame_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def resetgioco_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Comando ADMIN: Resetta lo stato di tutte le coppie a zero."""
     
     # Controllo di sicurezza: solo l'admin può eseguire questo comando
@@ -970,7 +970,7 @@ def main():
     app.add_handler(CommandHandler("superaprova", superaprova_command))
     app.add_handler(CommandHandler("scopettonero", scopettonero_command))
     app.add_handler(CommandHandler("avanzatappa", avanzatappa_command))
-    app.add_handler(CommandHandler("resetgame", resetgame_command))
+    app.add_handler(CommandHandler("resetgioco", resetgioco_command))
     app.add_handler(CommandHandler("statogioco", statogioco_command))
 
     app.add_handler(CallbackQueryHandler(handle_couple_selection, pattern=r'^SET_'))
