@@ -821,6 +821,95 @@ async def handle_advance_selection(update: Update, context: ContextTypes.DEFAULT
             # Manda un errore all'admin (nella chat admin) se la notifica fallisce
             logging.error(f"Errore nella notifica alla coppia {target_name}: {e}")
 
+# Nuova funzione: Resetta tutti i progressi del gioco
+async def resetgame_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Comando ADMIN: Resetta lo stato di tutte le coppie a zero."""
+    
+    # Controllo di sicurezza: solo l'admin può eseguire questo comando
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("Non sei autorizzato a usare questo comando.")
+        return
+    
+    couple_stages = get_couple_stages(context)
+    
+    # Conferma con un pulsante prima di resettare (molto importante!)
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ SÌ, CONFERMO IL RESET TOTALE", callback_data="CONFIRM_RESET")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(
+        "⚠️ ATTENZIONE: Sei sicuro di voler resettare il gioco?\n"
+        "Questo eliminerà i progressi di tutte le coppie e le obbligherà a ri-registrarsi.",
+        reply_markup=reply_markup
+    )
+
+# Nuova funzione: Gestisce la conferma del reset
+async def handle_reset_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Gestisce la callback query di conferma reset."""
+    query = update.callback_query
+    
+    # Controllo di sicurezza aggiuntivo
+    if update.effective_user.id != ADMIN_USER_ID:
+        await query.answer("Non sei autorizzato a eseguire questa azione.", show_alert=True)
+        return
+        
+    await query.answer()
+
+    if query.data == "CONFIRM_RESET":
+        # IL VERO RESET: Elimina l'intera chiave 'COUPLE_STAGES' dai dati persistenti
+        if 'COUPLE_STAGES' in context.bot_data:
+            del context.bot_data['COUPLE_STAGES']
+            
+            # Notifica l'admin
+            await query.edit_message_text(
+                "✅ RESET COMPLETATO! Tutti i progressi delle coppie sono stati eliminati."
+            )
+        else:
+            await query.edit_message_text("Il gioco era già in stato iniziale (nessun dato da resettare).")
+
+# Nuova funzione: Visualizza lo stato di gioco
+async def statogioco_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Comando ADMIN: Mostra un riepilogo dello stato di gioco attuale."""
+    
+    # Controllo di sicurezza: solo l'admin può eseguire questo comando
+    if update.effective_user.id != ADMIN_USER_ID:
+        await update.message.reply_text("Non sei autorizzato a usare questo comando.")
+        return
+    
+    couple_stages = get_couple_stages(context)
+    
+    if not couple_stages:
+        await update.message.reply_text("Lo stato è vuoto: Nessuna coppia è attualmente registrata.")
+        return
+
+    report = "📊 **STATO DI GIOCO ATTUALE** 📊\n\n"
+    
+    # Ordina le coppie per numero di tappa (dalla più avanti alla più indietro)
+    # Crea una lista di tuple (tappa, nome_coppia, dati)
+    sorted_couples = sorted(
+        [(data['tappa'], data['nome'], data) for data in couple_stages.values()],
+        key=lambda item: item[0],  # Ordina per tappa (indice 0)
+        reverse=True              # Dalla tappa più alta alla più bassa
+    )
+    
+    for tappa, nome, data in sorted_couples:
+        # Aggiunge un flag se la prova è stata sbloccata
+        prova_sbloccata = "✅ Sbloccata" if data.get('prova_sbloccata', False) else "❌ Bloccata"
+        
+        report += (
+            f"**{nome}**\n"
+            f"  - Tappa attuale: **{tappa}**\n"
+            f"  - Prova Tappa {tappa}: {prova_sbloccata}\n"
+        )
+        # Se vuoi vedere il Chat ID per debugging:
+        # chat_id = next((k for k, v in couple_stages.items() if v['nome'] == nome), "N/A")
+        # report += f"  - ID Chat: {chat_id}\n"
+        report += "--------------------\n"
+
+    await update.message.reply_text(report, parse_mode='Markdown')
 
 # Funzione che risponde a qualsiasi altro testo
 async def echo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -881,10 +970,15 @@ def main():
     app.add_handler(CommandHandler("superaprova", superaprova_command))
     app.add_handler(CommandHandler("scopettonero", scopettonero_command))
     app.add_handler(CommandHandler("avanzatappa", avanzatappa_command))
+    app.add_handler(CommandHandler("resetgame", resetgame_command))
+    app.add_handler(CommandHandler("statogioco", statogioco_command))
+
     app.add_handler(CallbackQueryHandler(handle_couple_selection, pattern=r'^SET_'))
     app.add_handler(CallbackQueryHandler(handle_advance_selection, pattern=r'^ADVANCE'))
     app.add_handler(CallbackQueryHandler(handle_hint_selection, pattern=r'^HINT_'))
     app.add_handler(CallbackQueryHandler(handle_keypad_input, pattern=r'^CODE_KEY_'))
+    app.add_handler(CallbackQueryHandler(handle_reset_confirmation, pattern=r'^CONFIRM_RESET'))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo_command))
 
     logging.info("🤖 Bot avviato in modalità polling...")
