@@ -116,8 +116,8 @@ HINTS_DATA = {
         {
             "name": "Castel Sismondo",
             "image1": "hints/Indizio 4/logo-disney-anno-1985-blu.jpg", 
-            "image2": "hints/Indizio 4/rondodasosa.jpg", 
-            "image3": "hints/Indizio 4/earthquakemove.jpg", 
+            "image2": "hints/Indizio 4/rondodasosa.jpeg", 
+            "image3": "hints/Indizio 4/earthquakemove.png", 
         },
     ],
 }
